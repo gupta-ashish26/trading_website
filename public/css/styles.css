@@ -1,0 +1,43 @@
+/* Ensure footer stays at the bottom */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+main {
+    flex: 1;
+}
+
+/* Navbar */
+nav.navbar-custom {
+    background-color: #007bff; /* Primary blue */
+    border-bottom: 1px solid #e9ecef; /* Light border */
+    padding: 10px 0; /* Adjust padding as needed */
+}
+.navbar-custom .nav-link {
+    color: #ffffff; /* White text color */
+}
+.navbar-custom .nav-link:hover {
+    color: #f8f9fa; /* Light gray text color on hover */
+}
+
+/* Header */
+header.header-custom {
+    background-color: #6c757d; /* Secondary gray */
+    border-bottom: 1px solid #e9ecef; /* Light border */
+    padding: 15px 0; /* Adjust as needed */
+}
+
+/* Footer */
+footer.footer-custom {
+    background-color: #f8f9fa; /* Light gray background */
+    border-top: 1px solid #e9ecef; /* Light border */
+    padding: 20px 0; /* Adjust as needed */
+    color: #6c757d; /* Dark gray text color */
+}
+.footer-custom .nav-link {
+    color: #6c757d; /* Dark gray text color */
+}
+.footer-custom .nav-link:hover {
+    color: #343a40; /* Dark text color on hover */
+}
