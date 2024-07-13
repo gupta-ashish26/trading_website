@@ -14,12 +14,19 @@
     text-transform: capitalize;
     transition: .2s linear;
 }
+
+html, body {
+    height: 100%; /* Ensure the body takes the full height of the viewport */
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background: url("/images/stat.png") no-repeat center center fixed;
     background-size: cover;
-    margin: 0;
-    padding: 0;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
+    display: flex;
+    flex-direction: column; /* Flexbox layout to push footer to the bottom */
 }
 
 html{
@@ -63,12 +70,13 @@ header{
     position: fixed;
     top:0;left: 0; right: 0;
     background: #fff;
-    padding:2rem 9%;
+    padding:1rem 9%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     z-index: 1000;
     box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+    
 }
 header .logo{
     font-size: 3rem;
@@ -176,7 +184,56 @@ header .fas fa-bars{
     flex: 1 1 40rem;
 }
 
+/* Ensure the main content takes available space */
+.main-content {
+    flex: 1;
+}
 
+/* Footer styling */
+footer {
+    background-color: whitesmoke;
+    text-align: center;
+    font-size: 1.5rem;
+    padding: 1rem 0;
+    width: 100%;
+    position: relative;
+    bottom: 0;
+}
+
+
+/* Products Section */
+.product-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.product-img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.product-name {
+    font-size: 1.5rem;
+    margin: 1rem 0 0.5rem;
+    color: #333;
+}
+
+.product-description {
+    font-size: 1rem;
+    color: #666;
+}
+
+.product-price {
+    font-size: 1.2rem;
+    color: #1e434c;
+    margin-top: 0.5rem;
+}
 
 
 
