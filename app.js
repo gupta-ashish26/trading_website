@@ -20,16 +20,17 @@ app.get("/",function(req,res){
     res.render("home")
 })
 
+
 app.get("/products", function(req, res) {
     const products = [
-        { name: "Product 1", description: "Description for Product 1", price: 100, image: "/images/logo.jpg" },
-        { name: "Product 2", description: "Description for Product 2", price: 150, image: "/images/logo.jpg" },
-        { name: "Product 3", description: "Description for Product 3", price: 200, image: "/images/logo.jpg" },
-        { name: "Product 4", description: "Description for Product 4", price: 250, image: "/images/logo.jpg" },
-        { name: "Product 5", description: "Description for Product 5", price: 300, image: "/images/logo.jpg" },
-        { name: "Product 6", description: "Description for Product 6", price: 350, image: "/images/logo.jpg" },
-        { name: "Product 7", description: "Description for Product 7", price: 400, image: "/images/logo.jpg" },
-        { name: "Product 8", description: "Description for Product 8", price: 450, image: "/images/logo.jpg" }
+        { name: "Product 1", description: "Description for Product 1", price: 100, image: "/images/pencil.jpg" },
+        { name: "Product 2", description: "Description for Product 2", price: 150, image: "/images/books.jpg" },
+        { name: "Product 3", description: "Description for Product 3", price: 200, image: "/images/colorpencil.jpg" },
+        { name: "Product 4", description: "Description for Product 4", price: 250, image: "/images/waterbottle.jpg" },
+        { name: "Product 5", description: "Description for Product 5", price: 300, image: "/images/highlighter.jpg" },
+        { name: "Product 6", description: "Description for Product 6", price: 350, image: "/images/calc.jpg" },
+        { name: "Product 7", description: "Description for Product 7", price: 400, image: "/images/bag.jpg" },
+        { name: "Product 8", description: "Description for Product 8", price: 450, image: "/images/pins.jpg" }
     ];
 
     res.render("products", { products: products });
