@@ -1,12 +1,34 @@
 <%- include("partials/header", { title: "Product" }) %>
 
-<section class="home main-content" id="home">
-    <div class="content">
-        <h3>Product</h3>
-        <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. 
-            Numquam cum nam facere? Iusto dicta, nisi veniam molestias voluptas perferendis possimus minus aliquid architecto
-             consequatur, provident sed magni odit labore vel.</p>
+<section class="product-detail main-content" id="product-detail">
+    <br><br><br><br>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="<%= product.image %>" class="product-img-detail" alt="<%= product.name %>">
+            </div>
+            <div class="col-md-6">
+                <br><br>
+                <h3><%= product.name %></h3>
+                <p><%= product.description %></p>
+                <p><strong>Price:</strong> $<%= product.price %></p>
+                <button class="btn btn-primary">Add to Cart</button>
+            </div>
+        </div>
     </div>
 </section>
 
 <%- include("partials/footer") %>
+
+<style>
+    .product-detail .product-img-detail {
+        width: 100%;
+        height: auto;
+    }
+    .product-detail .container {
+        margin-top: 20px;
+    }
+    .product-detail .btn {
+        margin-top: 20px;
+    }
+</style>
