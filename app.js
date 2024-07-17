@@ -1,10 +1,14 @@
 //Importing dependencies:
 
+require("dotenv").config()
 const express = require("express")
 const bodyParser = require("body-parser")
 const ejs = require("ejs")
 const _ = require("lodash")
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
+const session = require("express-session")
+const passport = require("passport")
+const passportLocalMongoose = require("passport-local-mongoose")
 
 //Setting up the modules to use them
 
@@ -14,6 +18,15 @@ app.set('view engine', 'ejs')
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(express.static("public"))
 
+app.use(session({
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: true,
+}))
+
+app.use(passport.initialize())
+app.use(passport.session())
+
 mongoose.connect("mongodb://localhost:27017/tradeDB")
 
 //Defining Schemas:
@@ -22,7 +35,21 @@ const adminSchema = new mongoose.Schema({
     password: String,
 })
 
+adminSchema.plugin(passportLocalMongoose)
+
 const Admin = mongoose.model("Admin", adminSchema)
+
+passport.use(Admin.createStrategy())
+
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+    Admin.findById(id).exec()
+        .then(user => done(null, user))
+        .catch(err => done(err, null))
+})
 
 const productSchema = new mongoose.Schema({
     name: String,
@@ -107,8 +134,96 @@ app.get("/:renderFile", function(req, res){
     res.render(requestFile)
 })
 
+app.get("/admin/dashboard", function(req,res){
+    if (req.isAuthenticated()){
+        Product.find()
+        .then((foundProducts)=>{
+            res.render("admin-dashboard", { products: foundProducts });
+        })
+        .catch((err)=>{
+            console.log(err);
+        });
+    } else {
+        res.redirect("/login");
+    }
+})
 
+app.get("/admin/modify/:productId", function(req, res){
+    if (req.isAuthenticated()){
+        Product.findById(req.params.productId)
+        .then((foundProduct)=>{
+            res.render("admin-modify", { product: foundProduct });
+        })
+        .catch((err)=>{
+            console.log(err);
+        });
+    } else {
+        res.redirect("/login");
+    }
+});
 
+// Admin.register({username: "admin"}, "admin", function(err, user){
+//     if (err){
+//         console.log(err)
+//     } else {
+//         console.log("Successfully admin added!")
+//     }
+// })
+
+app.post("/login", function(req, res){
+
+    const admin = new Admin({
+        email: _.lowerCase(req.body.username),
+        password: _.lowerCase(req.body.password)
+    });
+
+    req.login(admin, function(err){
+        if (err){
+            console.log("Login Error:", err)
+            res.redirect("/login")
+        } else {
+            passport.authenticate("local")(req, res, function(){
+                console.log("Authenticated successfully!")
+                res.redirect("/admin/dashboard")
+            });
+        }
+    });
+})
+
+app.post("/admin/modify/:productId", function(req, res){
+    if (req.isAuthenticated()){
+        Product.findByIdAndUpdate(req.params.productId, {
+            name: req.body.name,
+            description: req.body.description,
+            price: req.body.price,
+            stock: req.body.stock
+        })
+        .then(()=>{
+            res.render("status", { message: "Successfully updated" });
+        })
+        .catch((err)=>{
+            console.log(err);
+            res.render("status", { message: "Error updating product" });
+        });
+    } else {
+        res.redirect("/login");
+    }
+});
+
+app.get("/admin/delete/:productId", function(req, res){
+    if (req.isAuthenticated()){
+        Product.findByIdAndDelete(req.params.productId)
+        .then(()=>{
+            res.render("status", { message: "Successfully deleted" });
+        })
+        .catch((err)=>{
+            console.log(err);
+            res.render("status", { message: "Error deleting product" });
+        });
+    } else {
+        res.redirect("/login");
+    }
+});
 
 
 
