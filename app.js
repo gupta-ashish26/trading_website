@@ -9,6 +9,9 @@ const mongoose = require("mongoose")
 const session = require("express-session")
 const passport = require("passport")
 const passportLocalMongoose = require("passport-local-mongoose")
+const multer = require("multer")
+const fs = require("fs")
+const path = require("path")
 
 //Setting up the modules to use them
 
@@ -34,6 +37,17 @@ const adminSchema = new mongoose.Schema({
     email: String,
     password: String,
 })
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/images')
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname)
+    }
+})
+
+const upload = multer({ storage: storage })
 
 adminSchema.plugin(passportLocalMongoose)
 
@@ -72,17 +86,17 @@ const Product = mongoose.model("Product", productSchema)
 //     { name: "Product 6", description: "Description for Product 6", price: 350, image: "/images/calc.jpg", stock: 10 },
 //     { name: "Product 7", description: "Description for Product 7", price: 400, image: "/images/bag.jpg", stock: 10 },
 //     { name: "Product 8", description: "Description for Product 8", price: 450, image: "/images/pins.jpg", stock: 10 }
-// ];
+// ]
 
 // // Function to save the products to the database
 // const saveProducts = async () => {
 //     try {
 //         // Create instances of the Product model and save them
 //         for (let i = 0; i < products.length; i++) {
-//             const product = new Product(products[i]);
-//             await product.save();
+//             const product = new Product(products[i])
+//             await product.save()
 //         }
-//         console.log("Products saved successfully.");
+//         console.log("Products saved successfully.")
 //     } catch (error) {
 //         console.error("Error saving products:", error)
 //     }
@@ -92,7 +106,7 @@ const Product = mongoose.model("Product", productSchema)
 // saveProducts()
 
 // Middleware to handle requests for favicon.ico
-app.get('/favicon.ico', (req, res) => res.status(204));
+app.get('/favicon.ico', (req, res) => res.status(204))
 
 //Routing and rendering:
 
@@ -108,10 +122,10 @@ app.get("/products", function(req, res) {
 
     Product.find()
     .then((foundProducts)=>{
-        res.render("products", { products: foundProducts });
+        res.render("products", { products: foundProducts })
     })
     .catch((err)=>{
-        console.log(err);
+        console.log(err)
     })
 
 });
@@ -124,7 +138,7 @@ app.get("/products/:productName", function(req, res){
             res.render("product",{product: foundProduct })
         })
         .catch((err)=>{
-            console.log(err);
+            console.log(err)
         })
 })
 
@@ -138,11 +152,19 @@ app.get("/admin/dashboard", function(req,res){
     if (req.isAuthenticated()){
         Product.find()
         .then((foundProducts)=>{
-            res.render("admin-dashboard", { products: foundProducts });
+            res.render("admin-dashboard", { products: foundProducts })
         })
         .catch((err)=>{
-            console.log(err);
+            console.log(err)
         });
+    } else {
+        res.redirect("/login")
+    }
+})
+
+app.get("/admin/upload", function(req, res) {
+    if (req.isAuthenticated()) {
+        res.render("admin-upload");
     } else {
         res.redirect("/login");
     }
@@ -152,13 +174,13 @@ app.get("/admin/modify/:productId", function(req, res){
     if (req.isAuthenticated()){
         Product.findById(req.params.productId)
         .then((foundProduct)=>{
-            res.render("admin-modify", { product: foundProduct });
+            res.render("admin-modify", { product: foundProduct })
         })
         .catch((err)=>{
-            console.log(err);
+            console.log(err)
         });
     } else {
-        res.redirect("/login");
+        res.redirect("/login")
     }
 });
 
@@ -175,7 +197,7 @@ app.post("/login", function(req, res){
     const admin = new Admin({
         email: _.lowerCase(req.body.username),
         password: _.lowerCase(req.body.password)
-    });
+    })
 
     req.login(admin, function(err){
         if (err){
@@ -185,9 +207,9 @@ app.post("/login", function(req, res){
             passport.authenticate("local")(req, res, function(){
                 console.log("Authenticated successfully!")
                 res.redirect("/admin/dashboard")
-            });
+            })
         }
-    });
+    })
 })
 
 app.post("/admin/modify/:productId", function(req, res){
@@ -199,31 +221,71 @@ app.post("/admin/modify/:productId", function(req, res){
             stock: req.body.stock
         })
         .then(()=>{
-            res.render("status", { message: "Successfully updated" });
+            res.render("status", { message: "Successfully updated" })
         })
         .catch((err)=>{
             console.log(err);
-            res.render("status", { message: "Error updating product" });
+            res.render("status", { message: "Error updating product" })
+        })
+    } else {
+        res.redirect("/login")
+    }
+})
+
+app.post("/admin/upload", upload.single('productImage'), function(req, res) {
+    const product = new Product({
+        name: req.body.name,
+        description: req.body.description,
+        image: '/images/' + req.file.filename, // Store the image path
+        price: req.body.price,
+        stock: req.body.stock
+    });
+
+    product.save()
+        .then(() => res.render("status", { message: "Product added successfully" }))
+        .catch(err => {
+            console.log(err);
+            res.render("status", { message: "Error adding product" });
         });
+});
+
+app.get("/admin/delete/:productId", function(req, res){
+    if (req.isAuthenticated()){
+        Product.findById(req.params.productId)
+            .then((foundProduct) => {
+                if (foundProduct) {
+                    // Delete the image file from the public/images directory
+                    const imagePath = path.join(__dirname, 'public', foundProduct.image)
+                    fs.unlink(imagePath, (err) => {
+                        if (err) {
+                            console.log(err)
+                            res.render("status", { message: "Error deleting product image" })
+                            return
+                        }
+
+                        // Delete the product from the database
+                        Product.findByIdAndDelete(req.params.productId)
+                            .then(() => {
+                                res.render("status", { message: "Successfully deleted" });
+                            })
+                            .catch((err) => {
+                                console.log(err);
+                                res.render("status", { message: "Error deleting product" });
+                            });
+                    });
+                } else {
+                    res.render("status", { message: "Product not found" });
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                res.render("status", { message: "Error finding product" });
+            });
     } else {
         res.redirect("/login");
     }
 });
 
-app.get("/admin/delete/:productId", function(req, res){
-    if (req.isAuthenticated()){
-        Product.findByIdAndDelete(req.params.productId)
-        .then(()=>{
-            res.render("status", { message: "Successfully deleted" });
-        })
-        .catch((err)=>{
-            console.log(err);
-            res.render("status", { message: "Error deleting product" });
-        });
-    } else {
-        res.redirect("/login");
-    }
-});
 
 
 
