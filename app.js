@@ -249,8 +249,8 @@ app.get("/admin/orders", function (req, res) {
 app.post("/login", function(req, res){
 
     const admin = new Admin({
-        email: _.lowerCase(req.body.username),
-        password: _.lowerCase(req.body.password)
+        email: req.body.username,
+        password: req.body.password
     })
 
     req.login(admin, function(err){

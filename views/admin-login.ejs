@@ -24,6 +24,7 @@
     .custom-card .form-control {
       font-size: 2rem; /* Increase font size of form inputs */
       padding: 0.5rem 1rem; /* Increase padding for better spacing */
+      text-transform: none;
     }
 
     .custom {
@@ -38,11 +39,11 @@
             <h2>Admin Login</h2>
             <div class="form-group">
                 <label class="custom" for="username">Username</label>
-                <input type="text" class="form-control" id="username" name="username">
+                <input type="text" class="form-control" id="username" name="username" autocapitalize="none">
             </div>
             <div class="form-group">
                 <label class="custom" for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password">
+                <input type="password" class="form-control" id="password" name="password" autocapitalize="none">
             </div>
             <button type="submit" class="btn btn-primary btn-block">Login</button>
         </form>
