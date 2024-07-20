@@ -1,12 +1,40 @@
-# Trading Website
+# Trading/E-commerce Web Application (v1.0)
 
-<h2>Rules to Push to the Repo:</h2>
+<p>This is a fully functional, ready-to-use e-commerce web application. It is based on a guest user approach, allowing only admins to log in. Temporary sessions are created for guest users. As an admin, you can upload, modify, or delete the listed products and track details of previous orders.</p>
+
+<p><strong>Note:</strong> Implement your payment gateway after the checkout page when the user clicks "Proceed to Pay."</p>
+
+## Requirements/Tech Stack Used
 
 <ul>
-  <li>One must create a branch and keep experimenting on that branch. Pull the repo to the desired branch and only then experiment with it.</li>
-  <li>At no time can one directly push the changes to the <code>main</code> branch. Once you are confident that a major chunk has been completed and the code is in fully working condition only then push the changes to <code>main</code>.</li>
-  <li>Just for reference, any branch from the remote repo can be pulled to any branch on one's local repo.</li>
-  <li>Commit messages should be clear and crisp. (Follow present tense convention). (for <code>main</code> branch)</li>
-  <li>Commit messages are not necessary while you are experimenting with your own branch but recommended. No commit in <code>main</code> branch should have an unclear commit message.</li>
+  <li><strong>Node.js</strong></li>
+  <li><strong>Express</strong></li>
+  <li><strong>Passport</strong></li>
+  <li><strong>MongoDB</strong></li>
 </ul>
+
+<p><strong>Note:</strong> Make sure to install and set up node and MongoDB to use this application.</p>
+
+## Instructions to Use
+
+<ol>
+  <li>Pull the repository:
+    <pre><code>git clone &lt;repository-url&gt;</code></pre>
+  </li>
+  <li>Install all dependencies:
+    <pre><code>npm install</code></pre>
+  </li>
+  <li>Create a <code>.env</code> file and set a secret:
+    <pre><code>SECRET=&lt;your secret key&gt;</code></pre>
+  </li>
+  <li>Make sure to run the MongoDB server:
+    <pre><code>mongod</code></pre>
+  </li>
+  <li>Run the application:
+    <pre><code>node app.js</code></pre>
+  </li>
+  <li>Go to <code>localhost:3000</code> and explore</li>
+</ol>
+
+<p><strong>Note:</strong> By default, the admin username and password are "admin" and "admin". You can change, modify, or add new admins from the appropriate section of the code in <code>app.js</code>.</p>
 
