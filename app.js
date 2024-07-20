@@ -12,6 +12,7 @@ const passportLocalMongoose = require("passport-local-mongoose")
 const multer = require("multer")
 const fs = require("fs")
 const path = require("path")
+const favicon = require("serve-favicon")
 
 //Setting up the modules to use them
 
@@ -29,6 +30,8 @@ app.use(session({
 
 app.use(passport.initialize())
 app.use(passport.session())
+
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 
 mongoose.connect("mongodb://localhost:27017/tradeDB")
 
@@ -136,6 +139,23 @@ app.use(function (req, res, next) {
 // // Call the function to save the products
 // saveProducts()
 
+
+// Check if admin user exists and create if not
+async function ensureAdminUser() {
+    try {
+        const user = await Admin.findOne({ username: 'admin' });
+        if (!user) {
+            await Admin.register({ username: 'admin' }, 'admin');
+            console.log('Successfully admin added!');
+        } else {
+            console.log('Admin user already exists.');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+ensureAdminUser()
+
 // Middleware to handle requests for favicon.ico
 app.get('/favicon.ico', (req, res) => res.status(204))
 
@@ -236,7 +256,8 @@ app.get("/admin/modify/:productId", function(req, res){
 })
 
 app.get("/admin/orders", function (req, res) {
-    Order.find({})
+    if (req.isAuthenticated()){
+        Order.find({})
         .then(orders => {
             res.render("order-history", { orders: orders });
         })
@@ -244,6 +265,10 @@ app.get("/admin/orders", function (req, res) {
             console.error(err);
             res.render("status", { message: "Error fetching orders." });
         });
+    } else {
+        res.redirect("/login")
+    }
+    
 });
 
 
@@ -296,20 +321,25 @@ app.post("/admin/modify/:productId", function(req, res){
 })
 
 app.post("/admin/upload", upload.single('productImage'), function(req, res) {
-    const product = new Product({
-        name: req.body.name,
-        description: req.body.description,
-        image: '/images/' + req.file.filename, // Store the image path
-        price: req.body.price,
-        stock: req.body.stock
-    })
-
-    product.save()
-        .then(() => res.render("status", { message: "Product added successfully" }))
-        .catch(err => {
-            console.log(err)
-            res.render("status", { message: "Error adding product" })
+    if(req.isAuthenticated()){
+        const product = new Product({
+            name: req.body.name,
+            description: req.body.description,
+            image: '/images/' + req.file.filename, // Store the image path
+            price: req.body.price,
+            stock: req.body.stock
         })
+    
+        product.save()
+            .then(() => res.render("status", { message: "Product added successfully" }))
+            .catch(err => {
+                console.log(err)
+                res.render("status", { message: "Error adding product" })
+            })
+    } else {
+        res.redirect("/login")
+    }
+    
 })
 
 app.get("/admin/delete/:productId", function(req, res){
@@ -449,17 +479,59 @@ app.post("/process-checkout", function (req, res) {
 });
 
 app.post("/admin/orders/:orderId/fulfill", function (req, res) {
-    const orderId = req.params.orderId;
 
-    Order.deleteOne({ _id: orderId })
+    if (req.isAuthenticated()){
+        const orderId = req.params.orderId;
+
+    // Find the order by ID
+    Order.findById(orderId)
+        .then(order => {
+            if (!order) {
+                throw new Error("Order not found.");
+            }
+
+            console.log(order.items); // Inspect the structure of order.items
+
+            let products = order.items;
+            if (!Array.isArray(products)) {
+                throw new Error("Order items are not in the expected format.");
+            }
+
+            // Decrement the stock for each product in the order
+            const productUpdates = products.map(item => {
+                return Product.findById(item.productId)
+                    .then(productDoc => {
+                        if (!productDoc) {
+                            throw new Error(`Product not found: ${item.productId}`);
+                        }
+                        productDoc.stock -= item.quantity;
+                        if (productDoc.stock < 0) {
+                            throw new Error(`Not enough stock for product: ${item.productId}`);
+                        }
+                        return productDoc.save();
+                    });
+            });
+
+            // Wait for all product updates to complete
+            return Promise.all(productUpdates)
+                .then(() => {
+                    // Delete the order after stock updates
+                    return Order.deleteOne({ _id: orderId });
+                });
+        })
         .then(() => {
             res.redirect("/admin/orders");
         })
         .catch(err => {
             console.error(err);
-            res.render("status", { message: "Error fulfilling order." })
-        })
-})
+            res.render("status", { message: `Error fulfilling order: ${err.message}` });
+        });
+    } else {
+        res.redirect("/login")
+    }
+    
+});
+
 
 
 
