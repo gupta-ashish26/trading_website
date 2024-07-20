@@ -105,40 +105,10 @@ const Order = mongoose.model("Order",orderSchema)
 
 // Middleware to calculate cart item count
 app.use(function (req, res, next) {
-    const cart = req.session.cart || [];
-    res.locals.cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
-    next();
-});
-
-// //HardCoding the values of product and saving it into db for testing only
-// const products = [
-//     { name: "Product 1", description: "Description for Product 1", price: 100, image: "/images/pencil.jpg", stock: 10},
-//     { name: "Product 2", description: "Description for Product 2", price: 150, image: "/images/books.jpg", stock: 10 },
-//     { name: "Product 3", description: "Description for Product 3", price: 200, image: "/images/colorpencil.jpg", stock: 10 },
-//     { name: "Product 4", description: "Description for Product 4", price: 250, image: "/images/waterbottle.jpg", stock: 10 },
-//     { name: "Product 5", description: "Description for Product 5", price: 300, image: "/images/highlighter.jpg", stock: 10 },
-//     { name: "Product 6", description: "Description for Product 6", price: 350, image: "/images/calc.jpg", stock: 10 },
-//     { name: "Product 7", description: "Description for Product 7", price: 400, image: "/images/bag.jpg", stock: 10 },
-//     { name: "Product 8", description: "Description for Product 8", price: 450, image: "/images/pins.jpg", stock: 10 }
-// ]
-
-// // Function to save the products to the database
-// const saveProducts = async () => {
-//     try {
-//         // Create instances of the Product model and save them
-//         for (let i = 0; i < products.length; i++) {
-//             const product = new Product(products[i])
-//             await product.save()
-//         }
-//         console.log("Products saved successfully.")
-//     } catch (error) {
-//         console.error("Error saving products:", error)
-//     }
-// }
-
-// // Call the function to save the products
-// saveProducts()
-
+    const cart = req.session.cart || []
+    res.locals.cartItemCount = cart.reduce((total, item) => total + item.quantity, 0)
+    next()
+})
 
 // Check if admin user exists and create if not
 async function ensureAdminUser() {
@@ -156,10 +126,10 @@ async function ensureAdminUser() {
 }
 ensureAdminUser()
 
-// Middleware to handle requests for favicon.ico
-app.get('/favicon.ico', (req, res) => res.status(204))
+
 
 //Routing and rendering:
+
 
 app.get("/", function(req, res){
     res.render("home")
@@ -176,7 +146,6 @@ app.get("/logout", function(req, res){
     })
 })
 
-
 app.get("/products", function(req, res) {
 
     Product.find()
@@ -189,6 +158,7 @@ app.get("/products", function(req, res) {
 
 })
 
+//Route to view each Products:
 app.get("/products/:productName", function(req, res){
     const requestedProduct = req.params.productName
 
@@ -203,8 +173,7 @@ app.get("/products/:productName", function(req, res){
 
 // Route to display cart items
 app.get("/cart", function(req, res) {
-    const cart = req.session.cart || [] // Initialize cart as empty array if not exists
-
+    const cart = req.session.cart || [] 
     res.render("cart", { cart: cart })
 })
 
@@ -213,12 +182,14 @@ app.get("/checkout", function (req, res) {
     res.render("checkout", { cart: req.session.cart })
 })
 
+//Render other pages (about, contact etc)
 app.get("/:renderFile", function(req, res){
 
     const requestFile = _.lowerCase(req.params.renderFile)
     res.render(requestFile)
 })
 
+//Admin Dashboard
 app.get("/admin/dashboard", function(req,res){
     if (req.isAuthenticated()){
         Product.find()
@@ -233,6 +204,7 @@ app.get("/admin/dashboard", function(req,res){
     }
 })
 
+//Admin Upload
 app.get("/admin/upload", function(req, res) {
     if (req.isAuthenticated()) {
         res.render("admin-upload");
@@ -241,6 +213,7 @@ app.get("/admin/upload", function(req, res) {
     }
 })
 
+//Admin Modify
 app.get("/admin/modify/:productId", function(req, res){
     if (req.isAuthenticated()){
         Product.findById(req.params.productId)
@@ -255,6 +228,7 @@ app.get("/admin/modify/:productId", function(req, res){
     }
 })
 
+//Admin Route to list all orders
 app.get("/admin/orders", function (req, res) {
     if (req.isAuthenticated()){
         Order.find({})
@@ -263,23 +237,15 @@ app.get("/admin/orders", function (req, res) {
         })
         .catch(err => {
             console.error(err);
-            res.render("status", { message: "Error fetching orders." });
+            res.render("status", { message: "Error fetching orders." })
         });
     } else {
         res.redirect("/login")
     }
     
-});
+})
 
-
-// Admin.register({username: "admin"}, "admin", function(err, user){
-//     if (err){
-//         console.log(err)
-//     } else {
-//         console.log("Successfully admin added!")
-//     }
-// })
-
+//Login form post
 app.post("/login", function(req, res){
 
     const admin = new Admin({
@@ -300,6 +266,7 @@ app.post("/login", function(req, res){
     })
 })
 
+//Product Modify form post
 app.post("/admin/modify/:productId", function(req, res){
     if (req.isAuthenticated()){
         Product.findByIdAndUpdate(req.params.productId, {
@@ -320,6 +287,7 @@ app.post("/admin/modify/:productId", function(req, res){
     }
 })
 
+//Product add form post
 app.post("/admin/upload", upload.single('productImage'), function(req, res) {
     if(req.isAuthenticated()){
         const product = new Product({
@@ -342,6 +310,7 @@ app.post("/admin/upload", upload.single('productImage'), function(req, res) {
     
 })
 
+//Product delete form post
 app.get("/admin/delete/:productId", function(req, res){
     if (req.isAuthenticated()){
         Product.findById(req.params.productId)
@@ -379,16 +348,18 @@ app.get("/admin/delete/:productId", function(req, res){
     }
 })
 
+//Remove a product from cart
 app.post("/remove-from-cart/:productId", function(req, res) {
     const productId = req.params.productId;
 
     if (req.session.cart) {
-        req.session.cart = req.session.cart.filter(item => item.productId !== productId);
+        req.session.cart = req.session.cart.filter(item => item.productId !== productId)
     }
 
-    res.redirect("/cart");
-});
+    res.redirect("/cart")
+})
 
+//Add a product to cart
 app.post("/add-to-cart/:productId", function (req, res) {
     const productId = req.params.productId
     const quantity = Number(req.body.quantity)
@@ -420,17 +391,17 @@ app.post("/add-to-cart/:productId", function (req, res) {
                     name: product.name,
                     price: product.price,
                     quantity: quantity,
-                    image: product.image // Ensure this field matches your product schema
+                    image: product.image
                 })
             }
 
-            res.redirect("/products") // Redirect to products page or wherever needed
+            res.redirect("/products/"+product.name)
         })
         .catch(err => {
             console.log(err)
             res.render("status", { message: "Error adding to cart" })
-        });
-});
+        })
+})
 
 // Route to render checkout page
 app.get("/checkout", function (req, res) {
@@ -439,15 +410,15 @@ app.get("/checkout", function (req, res) {
 
 // Route to process checkout
 app.post("/process-checkout", function (req, res) {
-    const cart = req.session.cart;
-    const { firstName, lastName, contact, email, address1, address2, city, state, country, zip } = req.body;
+    const cart = req.session.cart
+    const { firstName, lastName, contact, email, address1, address2, city, state, country, zip } = req.body
 
     if (!cart || cart.length === 0) {
-        res.render("status", { message: "Your cart is empty. Please add items to the cart before checking out." });
-        return;
+        res.render("status", { message: "Your cart is empty. Please add items to the cart before checking out." })
+        return
     }
 
-    const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0)
 
     const order = new Order({
         firstName,
@@ -462,55 +433,51 @@ app.post("/process-checkout", function (req, res) {
         zip,
         items: cart,
         totalPrice
-    });
+    })
 
     order.save()
         .then(() => {
             // Clear the cart
-            req.session.cart = [];
+            req.session.cart = []
 
             // Render a success page
-            res.render("status", { message: "Order placed successfully!" });
+            res.render("status", { message: "Order placed successfully!" })
         })
         .catch(err => {
             console.error(err);
-            res.render("status", { message: "There was an error processing your order. Please try again." });
-        });
-});
+            res.render("status", { message: "There was an error processing your order. Please try again." })
+        })
+})
 
+//Fullfill order by admin and update product stock
 app.post("/admin/orders/:orderId/fulfill", function (req, res) {
 
     if (req.isAuthenticated()){
-        const orderId = req.params.orderId;
+        const orderId = req.params.orderId
 
     // Find the order by ID
     Order.findById(orderId)
         .then(order => {
             if (!order) {
-                throw new Error("Order not found.");
+                throw new Error("Order not found.")
             }
 
-            console.log(order.items); // Inspect the structure of order.items
-
-            let products = order.items;
-            if (!Array.isArray(products)) {
-                throw new Error("Order items are not in the expected format.");
-            }
+            let products = order.items
 
             // Decrement the stock for each product in the order
             const productUpdates = products.map(item => {
                 return Product.findById(item.productId)
                     .then(productDoc => {
                         if (!productDoc) {
-                            throw new Error(`Product not found: ${item.productId}`);
+                            throw new Error(`Product not found: ${item.productId}`)
                         }
                         productDoc.stock -= item.quantity;
                         if (productDoc.stock < 0) {
-                            throw new Error(`Not enough stock for product: ${item.productId}`);
+                            throw new Error(`Not enough stock for product: ${item.productId}`)
                         }
-                        return productDoc.save();
-                    });
-            });
+                        return productDoc.save()
+                    })
+            })
 
             // Wait for all product updates to complete
             return Promise.all(productUpdates)
@@ -524,15 +491,13 @@ app.post("/admin/orders/:orderId/fulfill", function (req, res) {
         })
         .catch(err => {
             console.error(err);
-            res.render("status", { message: `Error fulfilling order: ${err.message}` });
+            res.render("status", { message: `Error fulfilling order: ${err.message}` })
         });
     } else {
         res.redirect("/login")
     }
     
-});
-
-
+})
 
 
 //Spinning the app with a port
